@@ -142,6 +142,6 @@ for row in range(1, len(movies) + 3):
 
 ws.sheet_view.showGridLines = False
 
-wb.save("C:/Users/YourName/Documents/star_wars_order.xlsx")
+wb.save("star_wars_order.xlsx")
 
 print("Spreadsheet saved successfully!")
