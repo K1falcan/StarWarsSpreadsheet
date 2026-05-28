@@ -1,0 +1,48 @@
+import openpyxl
+from openpyxl import workbook
+# The Phantom Menace
+phantomMenace = "The Phantom Menace"
+phantomMenaceNum1 = 1      # Chronological order
+phantomMenaceNum2 = 4      # Release order
+
+# Attack of the Clones
+attackOfTheClones = "Attack of the Clones"
+attackOfTheClonesNum1 = 2  # Chronological order
+attackOfTheClonesNum2 = 5  # Release order
+
+# Revenge of the Sith
+revengeOfTheSith = "Revenge of the Sith"
+revengeOfTheSithNum1 = 3   # Chronological order
+revengeOfTheSithNum2 = 6  # Release order
+
+# A New Hope
+newHope = "A New Hope"
+newHopeNum1 = 4            # Chronological order
+newHopeNum2 = 1            # Release order
+
+# The Empire Strikes Back
+empireStrikesBack = "The Empire Strikes Back"
+empireStrikesBackNum1 = 5  # Chronological order
+empireStrikesBackNum2 = 2  # Release order
+
+# Return of the Jedi
+returnOfTheJedi = "Return of the Jedi"
+returnOfTheJediNum1 = 6    # Chronological order
+returnOfTheJediNum2 = 3    # Release order
+
+# The Force Awakens
+forceAwakens = "The Force Awakens"
+forceAwakensNum1 = 7       # Chronological order
+forceAwakensNum2 = 7      # Release order
+
+# The Last Jedi
+lastJedi = "The Last Jedi"
+lastJediNum1 = 8           # Chronological order
+lastJediNum2 = 8           # Release order
+
+# The Rise of Skywalker
+riseOfSkywalker = "The Rise of Skywalker"
+riseOfSkywalkerNum1 = 9    # Chronological order
+riseOfSkywalkerNum2 = 9    # Release order
+
+def main():
