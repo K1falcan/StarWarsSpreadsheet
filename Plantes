@@ -3,15 +3,15 @@ import json
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-# ── Fetch all characters from swapi.info ──
-url = "https://swapi.info/api/people"
+# ── Fetch all planets from swapi.info ──
+url = "https://swapi.info/api/planets"
 req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
 with urllib.request.urlopen(req) as response:
-    people = json.loads(response.read().decode())
+    planets = json.loads(response.read().decode())
 
 # ── Load your existing workbook ──
 wb = load_workbook("star_wars_order.xlsx")
-ws = wb.create_sheet(title="Characters")
+ws = wb.create_sheet(title="Planets")
 
 # ── Styles (exact match to MainCode.py) ──
 gold_fill  = PatternFill("solid", start_color="FFD700", end_color="FFD700")
@@ -39,14 +39,14 @@ def style_data(cell, row_idx):
     cell.alignment = center
     cell.border = thin_border
 
-# ── Fields to display (name first, then characteristics) ──
-fields = ["name", "height", "mass", "hair_color",
-          "skin_color", "eye_color", "birth_year", "gender"]
+# ── Fields to display ──
+fields = ["name", "rotation_period", "orbital_period", "diameter",
+          "climate", "gravity", "terrain", "population"]
 
 # ── Title row ──
 ws.merge_cells(f"A1:{chr(64 + len(fields))}1")
-ws["A1"] = "Star Wars Characters"
-ws["A1"].fill = PatternFill("solid", start_color="4A0000", end_color="4A0000")
+ws["A1"] = "Star Wars Planets"
+ws["A1"].fill = PatternFill("solid", start_color="00004A", end_color="00004A")
 ws["A1"].font = title_font
 ws["A1"].alignment = center
 ws["A1"].border = thin_border
@@ -58,20 +58,20 @@ for col, field in enumerate(fields, start=1):
     style_header(cell)
 ws.row_dimensions[2].height = 24
 
-# ── One row per character ──
-for i, person in enumerate(people):
+# ── One row per planet ──
+for i, planet in enumerate(planets):
     for col, field in enumerate(fields, start=1):
-        value = person.get(field, "unknown")
+        value = planet.get(field, "unknown")
         cell = ws.cell(row=i + 3, column=col, value=value)
         style_data(cell, i)
     ws.row_dimensions[i + 3].height = 24
 
 # ── Column widths ──
-column_widths = [20, 10, 10, 14, 14, 12, 14, 10]
+column_widths = [18, 16, 16, 12, 16, 16, 18, 16]
 for col, width in enumerate(column_widths, start=1):
     ws.column_dimensions[chr(64 + col)].width = width
 
 ws.sheet_view.showGridLines = False
 
 wb.save("star_wars_order.xlsx")
-print("Characters tab added successfully!")
+print("Planets tab added successfully!")
