@@ -1,23 +1,23 @@
 
 from __future__ import annotations
- 
+
 import argparse
 import random
 import sys
 from pathlib import Path
- 
+
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
- 
-# ── styling ──────────────────────────────────────────────────────────────────
- 
+
+# ── styling ─────────────────────────────────────────────────────────────
+
 GOLD        = "FFE81F"
 NAVY        = "1F2A44"
 DARK        = "0D0D1A"
 WHITE       = "FFFFFF"
 ALT_ROW     = "16213E"
- 
+
 TITLE_FONT  = Font(name="Arial", bold=True, size=16, color=GOLD)
 HEAD_FONT   = Font(name="Arial", bold=True, size=11, color=GOLD)
 Q_FONT      = Font(name="Arial", size=11, color=WHITE)
@@ -27,23 +27,23 @@ THIN        = Side(style="thin", color="2E2E4E")
 BORDER      = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 CENTER      = Alignment(horizontal="center", vertical="center", wrap_text=True)
 LEFT        = Alignment(horizontal="left",   vertical="center", wrap_text=True)
- 
- 
+
+
 def _fill(hex_color: str) -> PatternFill:
     return PatternFill("solid", fgColor=hex_color)
- 
- 
-# ── question builders ─────────────────────────────────────────────────────────
- 
+
+
+# ── question builders ──────────────────────────────────────────────────────────
+
 def _build_questions(path: Path) -> list[tuple[str, str, str]]:
     """Return a shuffled pool of (question, answer, category) tuples."""
     sheets = pd.read_excel(path, sheet_name=None)
     pool: list[tuple[str, str, str]] = []
- 
+
     # ── Characters ───────────────────────────────────────────────────────────
     if "Characters" in sheets:
         df = sheets["Characters"].dropna(subset=["Name"])
- 
+
         # homeworld question
         hw = df[df["Homeworld"].notna() & (df["Homeworld"] != "")].sample(frac=1)
         for _, row in hw.iterrows():
@@ -52,7 +52,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Homeworld"]),
                 "Characters",
             ))
- 
+
         # birth year question
         by = df[df["Birth Year"].notna() & (df["Birth Year"] != "") & (df["Birth Year"] != "unknown")]
         for _, row in by.iterrows():
@@ -61,7 +61,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Birth Year"]),
                 "Characters",
             ))
- 
+
         # species question
         sp = df[df["Species"].notna() & (df["Species"] != "")]
         for _, row in sp.iterrows():
@@ -70,7 +70,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Species"]),
                 "Characters",
             ))
- 
+
         # gender question
         gn = df[df["Gender"].notna() & (~df["Gender"].isin(["", "n/a", "unknown", "none"]))]
         for _, row in gn.iterrows():
@@ -79,11 +79,11 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Gender"]).capitalize(),
                 "Characters",
             ))
- 
-    # ── Planets ───────────────────────────────────────────────────────────────
+
+    # ── Planets ────────────────────────────────────────────────────────────
     if "Planets" in sheets:
         df = sheets["Planets"].dropna(subset=["Name"])
- 
+
         climate = df[df["Climate"].notna() & (df["Climate"] != "") & (df["Climate"] != "unknown")]
         for _, row in climate.iterrows():
             pool.append((
@@ -91,7 +91,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Climate"]).capitalize(),
                 "Planets",
             ))
- 
+
         terrain = df[df["Terrain"].notna() & (df["Terrain"] != "") & (df["Terrain"] != "unknown")]
         for _, row in terrain.iterrows():
             pool.append((
@@ -99,11 +99,11 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Terrain"]).capitalize(),
                 "Planets",
             ))
- 
-    # ── Starships ─────────────────────────────────────────────────────────────
+
+    # ── Starships ───────────────────────────────────────────────────────────
     if "Starships" in sheets:
         df = sheets["Starships"].dropna(subset=["Name"])
- 
+
         mfr = df[df["Manufacturer"].notna() & (df["Manufacturer"] != "")]
         for _, row in mfr.iterrows():
             pool.append((
@@ -111,7 +111,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Manufacturer"]),
                 "Starships",
             ))
- 
+
         cls = df[df["Starship Class"].notna() & (df["Starship Class"] != "")]
         for _, row in cls.iterrows():
             pool.append((
@@ -119,7 +119,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Starship Class"]).capitalize(),
                 "Starships",
             ))
- 
+
         hd = df[df["Hyperdrive Rating"].notna() & (df["Hyperdrive Rating"] != "") & (df["Hyperdrive Rating"] != "unknown")]
         for _, row in hd.iterrows():
             pool.append((
@@ -127,11 +127,11 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Hyperdrive Rating"]),
                 "Starships",
             ))
- 
-    # ── Vehicles ──────────────────────────────────────────────────────────────
+
+    # ── Vehicles ───────────────────────────────────────────────────────────
     if "Vehicles" in sheets:
         df = sheets["Vehicles"].dropna(subset=["Name"])
- 
+
         vc = df[df["Vehicle Class"].notna() & (df["Vehicle Class"] != "")]
         for _, row in vc.iterrows():
             pool.append((
@@ -139,7 +139,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Vehicle Class"]).capitalize(),
                 "Vehicles",
             ))
- 
+
         vm = df[df["Manufacturer"].notna() & (df["Manufacturer"] != "")]
         for _, row in vm.iterrows():
             pool.append((
@@ -147,11 +147,11 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Manufacturer"]),
                 "Vehicles",
             ))
- 
-    # ── Films ─────────────────────────────────────────────────────────────────
+
+    # ── Films ────────────────────────────────────────────────────────────
     if "Films (Chronological)" in sheets:
         df = sheets["Films (Chronological)"].dropna(subset=["Title"])
- 
+
         for _, row in df.iterrows():
             pool.append((
                 f"Who directed '{row['Title']}'?",
@@ -168,11 +168,11 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(int(row["Episode"])) if str(row["Episode"]).replace(".0","").isdigit() else str(row["Episode"]),
                 "Films",
             ))
- 
-    # ── Species ───────────────────────────────────────────────────────────────
+
+    # ── Species ────────────────────────────────────────────────────────────
     if "Species" in sheets:
         df = sheets["Species"].dropna(subset=["Name"])
- 
+
         lang = df[df["Language"].notna() & (df["Language"] != "") & (df["Language"] != "unknown")]
         for _, row in lang.iterrows():
             pool.append((
@@ -180,7 +180,7 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Language"]).capitalize(),
                 "Species",
             ))
- 
+
         cls2 = df[df["Classification"].notna() & (df["Classification"] != "")]
         for _, row in cls2.iterrows():
             pool.append((
@@ -188,22 +188,22 @@ def _build_questions(path: Path) -> list[tuple[str, str, str]]:
                 str(row["Classification"]).capitalize(),
                 "Species",
             ))
- 
+
     random.shuffle(pool)
     return pool[:10]
- 
- 
-# ── sheet writer ──────────────────────────────────────────────────────────────
- 
+
+
+# ── sheet writer ───────────────────────────────────────────────────────────
+
 def _write_trivia_sheet(path: Path, questions: list[tuple[str, str, str]]) -> None:
     wb = load_workbook(path)
- 
+
     if "Trivia" in wb.sheetnames:
         del wb["Trivia"]
- 
+
     ws = wb.create_sheet("Trivia")
     ws.sheet_view.showGridLines = False
- 
+
     # Title row
     ws.merge_cells("A1:D1")
     ws["A1"] = "⭐  Star Wars Trivia  ⭐"
@@ -211,7 +211,7 @@ def _write_trivia_sheet(path: Path, questions: list[tuple[str, str, str]]) -> No
     ws["A1"].fill   = _fill(DARK)
     ws["A1"].alignment = CENTER
     ws.row_dimensions[1].height = 36
- 
+
     # Sub-header hint
     ws.merge_cells("A2:D2")
     ws["A2"] = "Answers are hidden in column D — click a cell to reveal!"
@@ -219,7 +219,7 @@ def _write_trivia_sheet(path: Path, questions: list[tuple[str, str, str]]) -> No
     ws["A2"].fill      = _fill(DARK)
     ws["A2"].alignment = CENTER
     ws.row_dimensions[2].height = 18
- 
+
     # Column headers
     headers = ["#", "Category", "Question", "Answer (click to reveal)"]
     for col, header in enumerate(headers, start=1):
@@ -229,55 +229,63 @@ def _write_trivia_sheet(path: Path, questions: list[tuple[str, str, str]]) -> No
         cell.alignment = CENTER
         cell.border    = BORDER
     ws.row_dimensions[3].height = 22
- 
+
     # Question rows
     for i, (question, answer, category) in enumerate(questions, start=1):
         row = i + 3
         bg = DARK if i % 2 == 0 else ALT_ROW
- 
+
         num_cell = ws.cell(row=row, column=1, value=i)
         num_cell.font      = Q_FONT
         num_cell.fill      = _fill(bg)
         num_cell.alignment = CENTER
         num_cell.border    = BORDER
- 
+
         cat_cell = ws.cell(row=row, column=2, value=category)
         cat_cell.font      = Q_FONT
         cat_cell.fill      = _fill(bg)
         cat_cell.alignment = CENTER
         cat_cell.border    = BORDER
- 
+
         q_cell = ws.cell(row=row, column=3, value=question)
         q_cell.font      = Q_FONT
         q_cell.fill      = _fill(bg)
         q_cell.alignment = LEFT
         q_cell.border    = BORDER
- 
+
         # Answer: same dark background, near-invisible font — readable in formula bar
         a_cell = ws.cell(row=row, column=4, value=answer)
         a_cell.font      = ANS_FONT
         a_cell.fill      = _fill(bg)
         a_cell.alignment = LEFT
         a_cell.border    = BORDER
- 
+
         ws.row_dimensions[row].height = 28
- 
+
     # Column widths
     ws.column_dimensions["A"].width = 5
     ws.column_dimensions["B"].width = 14
     ws.column_dimensions["C"].width = 52
     ws.column_dimensions["D"].width = 30
- 
+
     # Move Trivia to the front
     wb.move_sheet("Trivia", offset=-len(wb.sheetnames) + 1)
- 
+
     wb.save(path)
-    print(f"✅  Trivia sheet written to '{path}' with {len(questions)} questions.")
-    print("    Open the file and go to the 'Trivia' tab to play!")
- 
- 
-# ── CLI ───────────────────────────────────────────────────────────────────────
- 
+    
+    # Success message when 10 questions are created
+    if len(questions) == 10:
+        print("🎉 SUCCESS! 🎉")
+        print(f"✅ Successfully created 10 Star Wars trivia questions and added them to the spreadsheet!")
+        print(f"📝 Trivia sheet written to '{path}'")
+        print("    Open the file and go to the 'Trivia' tab to play!")
+    else:
+        print(f"✅ Trivia sheet written to '{path}' with {len(questions)} questions.")
+        print("    Open the file and go to the 'Trivia' tab to play!")
+
+
+# ── CLI ──────────────────────────────────────────────────────────────
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Add a Trivia sheet to star_wars_order.xlsx.")
     parser.add_argument(
@@ -286,22 +294,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Path to the Star Wars workbook (default: star_wars_order.xlsx).",
     )
     return parser.parse_args(argv)
- 
- 
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.input)
- 
+
     if not path.exists():
         print(f"❌  File not found: '{path}'")
         print("    Run main.py first to generate star_wars_order.xlsx.")
         return 1
- 
+
     questions = _build_questions(path)
     if not questions:
         print("❌  Could not build questions — is the spreadsheet populated?")
         return 1
- 
+
     _write_trivia_sheet(path, questions)
     return 0
- 
