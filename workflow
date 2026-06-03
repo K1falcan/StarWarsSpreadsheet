@@ -12,6 +12,8 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install dependencies
-        run: pip install openpyxl
-      - name: Run StarWarsSpreadsheet.py
+        run: pip install openpyxl pandas requests
+      - name: Run main StarWarsSpreadsheet script
         run: python hello.py
+      - name: Generate Trivia sheet
+        run: python triva
