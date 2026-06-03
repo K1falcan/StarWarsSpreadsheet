@@ -17,3 +17,4 @@ jobs:
         run: python hello.py
       - name: Generate Trivia sheet
         run: python triva
+      
