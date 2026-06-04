@@ -15,6 +15,4 @@ jobs:
         run: pip install openpyxl pandas requests
       - name: Run main StarWarsSpreadsheet script
         run: python hello.py
-      - name: Generate Trivia sheet
-        run: python triva
       
