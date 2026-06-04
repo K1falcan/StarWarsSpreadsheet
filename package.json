@@ -1,0 +1,13 @@
+{
+  "name": "star-wars-trivia",
+  "version": "1.0.0",
+  "description": "Star Wars Multiple Choice Trivia App",
+  "main": "src/index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
