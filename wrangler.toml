@@ -2,5 +2,9 @@ name = "star-wars-trivia"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
+[[kv_namespaces]]
+binding = "SW_TRIVIA_KV"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
 [build]
 command = "npm install"
