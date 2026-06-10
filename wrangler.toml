@@ -10,7 +10,7 @@ database_id = "7ec5235f-52ca-42ce-a67f-4edb07db5264"
 
 # Optional: set your admin panel password as an env var
 [vars]
-ADMIN_SECRET = "starwars-admin"
+ADMIN_SECRET = "933672328"
 
 [build]
 command = "npm install"
