@@ -736,3 +736,5 @@ export default {
     if (p==="/admin")  return new Response(getAdminHTML(), {headers:{"Content-Type":"text/html;charset=UTF-8"}});
 
     return new Response(getHTML(), {headers:{"Content-Type":"text/html;charset=UTF-8"}});
+  }
+};
