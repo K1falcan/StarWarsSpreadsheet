@@ -91,3 +91,65 @@ Your live URL: https://starwarstrivia.koyomc12.workers.dev/
 | 5 | Jedi Council | 500 |
 | 6 | Chosen One | 750 |
 | 7 | Grand Master | 1,000 |
+a# Star Wars Trivia — Cloudflare Worker v4
+## D1 SQL Database + Admin Panel + CSV Export
+
+## What's new in v4
+- 🗄️  Switched from KV to **D1 (SQLite)** — supports real SQL queries
+- 🛡️  Admin panel at `/admin` — password protected
+- 🔍  Filter players by username, min XP, min correct answers
+- 🔃  Sort by any column (XP, accuracy, logins, streak, etc.)
+- 📊  Summary stats dashboard (total players, correct answers, avg accuracy)
+- ⬇️  Export all player data to CSV with one click
+
+---
+
+## Setup (do this once)
+
+### Step 1 — Create the D1 database
+```bash
+npx wrangler d1 create sw-trivia-players
+```
+Copy the `database_id` it prints.
+
+### Step 2 — Paste the ID into wrangler.toml
+Replace `PASTE_YOUR_D1_DATABASE_ID_HERE` with your real ID.
+
+### Step 3 — Change your admin password (optional but recommended)
+In `wrangler.toml` change:
+```
+ADMIN_SECRET = "starwars-admin"
+```
+to something only you know.
+
+### Step 4 — Deploy
+```bash
+npm install
+npm run deploy
+```
+
+---
+
+## URLs
+| URL | Description |
+|---|---|
+| `/` | The trivia game |
+| `/admin` | Admin panel (enter your ADMIN_SECRET) |
+| `/api/export?secret=YOUR_SECRET` | Download CSV of all players |
+
+## Admin panel features
+- Search players by username
+- Filter by minimum XP or correct answers
+- Sort by any column — click headers to toggle asc/desc
+- See accuracy bar for each player
+- One-click CSV export
+
+## API routes
+| Route | Method | Description |
+|---|---|---|
+| `/api/register` | POST | Create account |
+| `/api/login` | POST | Login + increment logins |
+| `/api/save` | POST | Save stats after each answer |
+| `/api/trivia` | GET | Get 10 questions |
+| `/api/admin` | GET | Query players (requires secret) |
+| `/api/export` | GET | Download CSV (requires secret) |
