@@ -11,3 +11,4 @@ greeting.xlsx
 
 # OS / editor cruft
 .DS_Store
+node_modules/workerd/bin/workerd
