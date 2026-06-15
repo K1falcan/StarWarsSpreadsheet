@@ -2,6 +2,7 @@ name = "star-wars-trivia"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
+<<<<<<< HEAD
 # D1 SQL Database binding
 [[d1_databases]]
 binding = "DB"
@@ -11,6 +12,11 @@ database_id = "7ec5235f-52ca-42ce-a67f-4edb07db5264"
 # Optional: set your admin panel password as an env var
 [vars]
 ADMIN_SECRET = "933672328"
+=======
+[[kv_namespaces]]
+binding = "SW_TRIVIA_KV"
+id = 4092d52ba5b54b1cacafcc7908dea9f6
+>>>>>>> parent of e3d9243 (dd)
 
 [build]
 command = "npm install"
