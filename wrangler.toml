@@ -1,4 +1,4 @@
-name = "star-wars-trivia"
+name = "starwarsspreadsheet"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
