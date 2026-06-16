@@ -30,6 +30,18 @@ async function initDB(db) {
       last_login    TEXT
     )
   `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS scores (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      player_id   INTEGER NOT NULL,
+      round_score INTEGER NOT NULL,
+      correct     INTEGER NOT NULL,
+      wrong       INTEGER NOT NULL,
+      xp_earned   INTEGER NOT NULL,
+      played_at   TEXT    DEFAULT (datetime('now')),
+      FOREIGN KEY (player_id) REFERENCES players(id)
+    )
+  `).run();
 }
 
 // ── Auth API ──────────────────────────────────────────────────────────────
@@ -83,6 +95,39 @@ async function handleSave(request, env) {
   `).bind(correct, wrong, xp, bestStreak, roundsPlayed, username.trim()).run();
 
   return json({ok:true});
+}
+async function handleSaveRound(request, env) {
+  await initDB(env.DB);
+  const {username, round_score, correct, wrong, xp_earned} = await request.json();
+  if (!username) return json({error:"No username."},400);
+
+  const player = await env.DB.prepare("SELECT id FROM players WHERE username=?")
+    .bind(username.trim()).first();
+  if (!player) return json({error:"Player not found."},404);
+
+  await env.DB.prepare(
+    "INSERT INTO scores (player_id, round_score, correct, wrong, xp_earned) VALUES (?,?,?,?,?)"
+  ).bind(player.id, round_score, correct, wrong, xp_earned).run();
+
+  return json({ok:true});
+}
+
+async function handleGetHistory(request, env) {
+  await initDB(env.DB);
+  const url = new URL(request.url);
+  const username = url.searchParams.get("username");
+  if (!username) return json({error:"No username."},400);
+
+  const rows = await env.DB.prepare(`
+    SELECT s.round_score, s.correct, s.wrong, s.xp_earned, s.played_at
+    FROM scores s
+    JOIN players p ON p.id = s.player_id
+    WHERE p.username = ?
+    ORDER BY s.played_at DESC
+    LIMIT 20
+  `).bind(username.trim()).all();
+
+  return json({ok:true, history: rows.results});
 }
 
 // ── Trivia question bank ───────────────────────────────────────────────────
@@ -408,6 +453,18 @@ function renderSummary(){
   const lu=state.leveledUp?\`<div class="level-up-banner">⚡ LEVEL UP! You are now a <strong>\${current.title}</strong>!</div>\`:"";
   render(\`<div class="summary-card"><h2>Round \${state.roundNum} Complete</h2><div class="summary-score">\${state.roundScore}<span>/10</span></div><div class="summary-verdict">\${verdict(state.roundScore)}</div>\${lu}<div class="summary-stats"><div class="stat-box"><div class="stat-val">\${state.xp}</div><div class="stat-lbl">TOTAL XP</div></div><div class="stat-box"><div class="stat-val">\${state.bestStreak}</div><div class="stat-lbl">BEST STREAK</div></div><div class="stat-box"><div class="stat-val">\${acc}%</div><div class="stat-lbl">ALL-TIME ACC.</div></div></div><div class="summary-stats" style="grid-template-columns:repeat(2,1fr)"><div class="stat-box"><div class="stat-val" style="color:var(--green)">\${state.totalCorrect}</div><div class="stat-lbl">TOTAL CORRECT</div></div><div class="stat-box"><div class="stat-val" style="color:var(--red)">\${state.totalWrong}</div><div class="stat-lbl">TOTAL WRONG</div></div></div><button class="btn-primary" onclick="startRound()">NEXT ROUND →</button><button class="btn-secondary" onclick="renderPlayerHistory()">VIEW MY HISTORY</button></div>\`);
   saveStats();
+  // Save this round to scores table
+  if(player){
+    const xpThisRound=state.xp-(player.xp||0);
+    fetch("/api/saveround",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      username:player.username,
+      round_score:state.roundScore,
+      correct:state.roundScore,
+      wrong:10-state.roundScore,
+      xp_earned:Math.max(0,xpThisRound)
+    })});
+    player.xp=state.xp;
+  }
 }
 
 window.chooseAnswer=chooseAnswer;window.nextStep=nextStep;window.startRound=startRound;
@@ -427,8 +484,10 @@ export default {
 
     if (p==="/api/register" && request.method==="POST") return handleRegister(request, env);
     if (p==="/api/login"    && request.method==="POST") return handleLogin(request, env);
-    if (p==="/api/save"     && request.method==="POST") return handleSave(request, env);
-    if (p==="/api/trivia")                              return triviaHandler(request);
+    if (p==="/api/save"      && request.method==="POST") return handleSave(request, env);
+    if (p==="/api/saveround" && request.method==="POST") return handleSaveRound(request, env);
+    if (p==="/api/history")                              return handleGetHistory(request, env);
+    if (p==="/api/trivia")                               return triviaHandler(request);
 
     return new Response(getHTML(), {headers:{"Content-Type":"text/html;charset=UTF-8"}});
   },
