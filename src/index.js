@@ -1,6 +1,6 @@
-/ src/index.js — Star Wars Trivia Worker v5
+// src/index.js - Star Wars Trivia Worker v5
 // D1 SQL database, player auth + history, no admin panel, fresh start
- 
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 async function hashPassword(password) {
   const enc = new TextEncoder();
@@ -12,7 +12,7 @@ function json(data, status=200) {
     status, headers:{"Content-Type":"application/json","Cache-Control":"no-store"}
   });
 }
- 
+
 // ── DB init ───────────────────────────────────────────────────────────────
 async function initDB(db) {
   await db.prepare(`
@@ -31,7 +31,7 @@ async function initDB(db) {
     )
   `).run();
 }
- 
+
 // ── Auth API ──────────────────────────────────────────────────────────────
 async function handleRegister(request, env) {
   await initDB(env.DB);
@@ -39,52 +39,52 @@ async function handleRegister(request, env) {
   if (!username || !password) return json({error:"Username and password required."},400);
   if (username.length < 2)    return json({error:"Username must be at least 2 characters."},400);
   if (password.length < 4)    return json({error:"Password must be at least 4 characters."},400);
- 
+
   const exists = await env.DB.prepare("SELECT id FROM players WHERE username=?")
     .bind(username.trim()).first();
   if (exists) return json({error:"Username already taken."},409);
- 
+
   const hash = await hashPassword(password);
   await env.DB.prepare("INSERT INTO players (username,password_hash) VALUES (?,?)")
     .bind(username.trim(), hash).run();
   return json({ok:true, username:username.trim()});
 }
- 
+
 async function handleLogin(request, env) {
   await initDB(env.DB);
   const {username, password} = await request.json();
   if (!username || !password) return json({error:"Username and password required."},400);
- 
+
   const row = await env.DB.prepare("SELECT * FROM players WHERE username=?")
     .bind(username.trim()).first();
   if (!row) return json({error:"Username not found."},404);
- 
+
   const hash = await hashPassword(password);
   if (hash !== row.password_hash) return json({error:"Incorrect password."},401);
- 
+
   await env.DB.prepare(
     "UPDATE players SET total_logins=total_logins+1, last_login=datetime('now') WHERE id=?"
   ).bind(row.id).run();
- 
+
   const {password_hash, ...safe} = row;
   safe.total_logins += 1;
   return json({ok:true, profile:safe});
 }
- 
+
 async function handleSave(request, env) {
   await initDB(env.DB);
   const {username, correct, wrong, xp, bestStreak, roundsPlayed} = await request.json();
   if (!username) return json({error:"No username."},400);
- 
+
   await env.DB.prepare(`
     UPDATE players SET
       total_correct=?, total_wrong=?, xp=?, best_streak=?, rounds_played=?
     WHERE username=?
   `).bind(correct, wrong, xp, bestStreak, roundsPlayed, username.trim()).run();
- 
+
   return json({ok:true});
 }
- 
+
 // ── Trivia question bank ───────────────────────────────────────────────────
 const ALL_QUESTIONS = [
   {category:"Movie Order",question:"Which film is #1 in chronological order?",options:["The Phantom Menace","A New Hope","Attack of the Clones","Revenge of the Sith"],answer:0},
@@ -123,7 +123,7 @@ const ALL_QUESTIONS = [
   {category:"Characters",question:"What is Darth Vader's birth year?",options:["41 BBY","42 BBY","57 BBY","32 BBY"],answer:0},
   {category:"Characters",question:"What is C-3PO's eye color?",options:["Blue","Red","Yellow","Green"],answer:1},
 ];
- 
+
 const LEVELS = [
   {level:1,title:"Youngling",   xpNeeded:0,   color:"#888"},
   {level:2,title:"Padawan",     xpNeeded:50,  color:"#4FC3F7"},
@@ -133,13 +133,13 @@ const LEVELS = [
   {level:6,title:"Chosen One",  xpNeeded:750, color:"#EF5350"},
   {level:7,title:"Grand Master",xpNeeded:1000,color:"#FF7043"},
 ];
- 
+
 function shuffle(arr){
   const a=[...arr];
   for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
- 
+
 function triviaHandler(request){
   const url=new URL(request.url);
   const used=(url.searchParams.get("used")||"").split(",").map(Number).filter(n=>!isNaN(n));
@@ -148,7 +148,7 @@ function triviaHandler(request){
   const picked=shuffle(avail).slice(0,10).map(({q,i})=>({...q,id:i}));
   return new Response(JSON.stringify(picked),{headers:{"Content-Type":"application/json","Cache-Control":"no-store"}});
 }
- 
+
 // ── Game HTML ─────────────────────────────────────────────────────────────
 function getHTML(){
   return `<!DOCTYPE html>
@@ -281,13 +281,13 @@ header p{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:1px;}
 const LEVELS=${JSON.stringify(LEVELS)};
 let player=null;
 let state={xp:0,streak:0,bestStreak:0,totalCorrect:0,totalWrong:0,roundsPlayed:0,roundNum:0,usedIds:[],questions:[],qIndex:0,answers:[],roundScore:0,leveledUp:false,prevLevel:null,_lastChosen:-1};
- 
+
 function getLevel(xp){let c=LEVELS[0];for(const l of LEVELS){if(xp>=l.xpNeeded)c=l;else break;}const ni=LEVELS.indexOf(c)+1;return{current:c,next:LEVELS[ni]||null};}
 function xpFor(streak){return 10+Math.min(streak,5)*2;}
-function verdict(s){if(s===10)return"Perfect — The Force is strong with you!";if(s>=8)return"Excellent — Jedi Knight material!";if(s>=6)return"Good — Keep training, Padawan.";if(s>=4)return"Fair — The path is long...";return"The Dark Side clouds your knowledge.";}
+function verdict(s){if(s===10)return"Perfect - The Force is strong with you!";if(s>=8)return"Excellent - Jedi Knight material!";if(s>=6)return"Good - Keep training, Padawan.";if(s>=4)return"Fair - The path is long...";return"The Dark Side clouds your knowledge.";}
 function render(html){document.getElementById("app-content").innerHTML=html;}
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200);}
- 
+
 function renderProfileBar(){
   if(!player)return;
   const tot=state.totalCorrect+state.totalWrong;
@@ -295,7 +295,7 @@ function renderProfileBar(){
   document.getElementById("profileBar").style.display="block";
   document.getElementById("profileBar").innerHTML=\`<div class="profile-bar"><div><div class="profile-name">👤 \${player.username}</div><div class="profile-stats">✅ \${state.totalCorrect} correct &nbsp;|&nbsp; ❌ \${state.totalWrong} wrong &nbsp;|&nbsp; 🎯 \${acc}% &nbsp;|&nbsp; 🔑 \${player.total_logins} logins</div></div><button class="btn-logout" onclick="logout()">LOG OUT</button></div>\`;
 }
- 
+
 function updateHUD(){
   if(!player)return;
   document.getElementById("hud").style.display="grid";
@@ -311,18 +311,18 @@ function updateHUD(){
   document.getElementById("xpLabel").textContent=state.xp+" XP"+(next?" · "+(next.xpNeeded-state.xp)+" to "+next.title:" · MAX");
   document.getElementById("streakVal").textContent=state.streak;
 }
- 
+
 async function saveStats(){
   if(!player)return;
   await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:player.username,correct:state.totalCorrect,wrong:state.totalWrong,xp:state.xp,bestStreak:state.bestStreak,roundsPlayed:state.roundsPlayed})});
 }
- 
+
 function renderAuth(tab="login"){
   render(\`<div class="auth-card"><h2>ENTER THE ARCHIVES</h2><div class="auth-tabs"><button class="auth-tab \${tab==="login"?"active":""}" onclick="renderAuth('login')">LOG IN</button><button class="auth-tab \${tab==="register"?"active":""}" onclick="renderAuth('register')">REGISTER</button></div><div class="auth-error" id="authErr"></div><div class="form-group"><label>Username</label><input id="authUser" type="text" placeholder="YourUsername"/></div><div class="form-group"><label>Password</label><input id="authPass" type="password" placeholder="••••••••"/></div><button class="btn-primary" onclick="\${tab==="login"?"doLogin()":"doRegister()"}">\${tab==="login"?"LOG IN →":"CREATE ACCOUNT →"}</button></div>\`);
 }
- 
+
 function showAuthError(msg){const el=document.getElementById("authErr");if(el){el.textContent=msg;el.classList.add("show");}}
- 
+
 async function doLogin(){
   const username=document.getElementById("authUser").value.trim();
   const password=document.getElementById("authPass").value;
@@ -338,7 +338,7 @@ async function doLogin(){
   state.roundsPlayed=player.rounds_played||0;
   updateHUD();renderProfileBar();renderPlayerHistory();
 }
- 
+
 async function doRegister(){
   const username=document.getElementById("authUser").value.trim();
   const password=document.getElementById("authPass").value;
@@ -348,7 +348,7 @@ async function doRegister(){
   if(!res.ok){showAuthError(data.error||"Registration failed.");return;}
   showToast("Account created! Please log in.");renderAuth("login");
 }
- 
+
 function logout(){
   saveStats();
   player=null;
@@ -357,14 +357,14 @@ function logout(){
   document.getElementById("profileBar").style.display="none";
   renderAuth("login");
 }
- 
+
 function renderPlayerHistory(){
   const tot=state.totalCorrect+state.totalWrong;
   const acc=tot>0?Math.round(state.totalCorrect/tot*100):0;
   const{current}=getLevel(state.xp);
   render(\`<div class="history-card"><h3>WELCOME BACK, \${player.username.toUpperCase()}</h3><div class="history-grid"><div class="history-stat"><div class="val" style="color:var(--green)">\${state.totalCorrect}</div><div class="lbl">CORRECT</div></div><div class="history-stat"><div class="val" style="color:var(--red)">\${state.totalWrong}</div><div class="lbl">WRONG</div></div><div class="history-stat"><div class="val">\${state.roundsPlayed}</div><div class="lbl">ROUNDS PLAYED</div></div><div class="history-stat"><div class="val">\${state.bestStreak}🔥</div><div class="lbl">BEST STREAK</div></div></div><div style="text-align:center;font-size:14px;color:var(--muted);margin-bottom:8px">All-time accuracy: <strong style="color:var(--gold)">\${acc}%</strong> &nbsp;|&nbsp; Rank: <strong style="color:\${current.color}">\${current.title}</strong> (Lv.\${current.level})</div><div style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:18px">🔑 Total logins: <strong style="color:var(--gold)">\${player.total_logins}</strong></div></div><button class="btn-primary" onclick="startRound()">START PLAYING →</button>\`);
 }
- 
+
 async function startRound(){
   render('<div class="loading"><div class="spinner"></div>Loading questions…</div>');
   const res=await fetch("/api/trivia?used="+state.usedIds.join(","));
@@ -376,9 +376,9 @@ async function startRound(){
   if(state.usedIds.length>28)state.usedIds=[];
   renderQuestion();
 }
- 
+
 function dotsHTML(){return state.questions.map((_,i)=>{let c="dot";if(state.answers[i]===true)c+=" answered-correct";if(state.answers[i]===false)c+=" answered-wrong";if(state.answers[i]===null&&i===state.qIndex)c+=" current";return'<div class="'+c+'"></div>';}).join("");}
- 
+
 function renderQuestion(){
   const q=state.questions[state.qIndex];
   const answered=state.answers[state.qIndex]!==null;
@@ -389,7 +389,7 @@ function renderQuestion(){
   if(answered){const ok=state.answers[state.qIndex]===true;const xpe=ok?xpFor(state.streak):0;fb=\`<div class="feedback-row \${ok?"correct-fb":"wrong-fb"}">\${ok?"✓ Correct!":"✗ Answer: <strong>"+q.options[q.answer]+"</strong>"}\${ok?'<span class="xp-gain">+'+xpe+' XP</span>':""}</div>\`;}
   render(\`<div class="round-info"><span>Round <strong>\${state.roundNum}</strong> · Q\${state.qIndex+1}/10</span><div class="progress-dots">\${dotsHTML()}</div></div><div class="question-card"><span class="\${catCls}">\${q.category}</span><div class="question-text">\${q.question}</div><div class="options">\${opts}</div>\${fb}</div>\${answered?'<button class="btn-primary" onclick="nextStep()">'+(state.qIndex<state.questions.length-1?"NEXT QUESTION →":"SEE RESULTS →")+"</button>":""}\`);
 }
- 
+
 function chooseAnswer(chosen){
   if(state.answers[state.qIndex]!==null)return;
   const q=state.questions[state.qIndex];const ok=chosen===q.answer;
@@ -398,9 +398,9 @@ function chooseAnswer(chosen){
   else{state.streak=0;state.totalWrong++;}
   updateHUD();renderProfileBar();saveStats();renderQuestion();
 }
- 
+
 function nextStep(){if(state.qIndex<state.questions.length-1){state.qIndex++;renderQuestion();}else renderSummary();}
- 
+
 function renderSummary(){
   state.roundsPlayed++;
   const tot=state.totalCorrect+state.totalWrong;const acc=tot>0?Math.round(state.totalCorrect/tot*100):0;
@@ -409,7 +409,7 @@ function renderSummary(){
   render(\`<div class="summary-card"><h2>Round \${state.roundNum} Complete</h2><div class="summary-score">\${state.roundScore}<span>/10</span></div><div class="summary-verdict">\${verdict(state.roundScore)}</div>\${lu}<div class="summary-stats"><div class="stat-box"><div class="stat-val">\${state.xp}</div><div class="stat-lbl">TOTAL XP</div></div><div class="stat-box"><div class="stat-val">\${state.bestStreak}</div><div class="stat-lbl">BEST STREAK</div></div><div class="stat-box"><div class="stat-val">\${acc}%</div><div class="stat-lbl">ALL-TIME ACC.</div></div></div><div class="summary-stats" style="grid-template-columns:repeat(2,1fr)"><div class="stat-box"><div class="stat-val" style="color:var(--green)">\${state.totalCorrect}</div><div class="stat-lbl">TOTAL CORRECT</div></div><div class="stat-box"><div class="stat-val" style="color:var(--red)">\${state.totalWrong}</div><div class="stat-lbl">TOTAL WRONG</div></div></div><button class="btn-primary" onclick="startRound()">NEXT ROUND →</button><button class="btn-secondary" onclick="renderPlayerHistory()">VIEW MY HISTORY</button></div>\`);
   saveStats();
 }
- 
+
 window.chooseAnswer=chooseAnswer;window.nextStep=nextStep;window.startRound=startRound;
 window.doLogin=doLogin;window.doRegister=doRegister;window.renderAuth=renderAuth;
 window.logout=logout;window.renderPlayerHistory=renderPlayerHistory;
@@ -418,18 +418,18 @@ renderAuth("login");
 </body>
 </html>`;
 }
- 
+
 // ── Router ────────────────────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const p   = url.pathname;
- 
+
     if (p==="/api/register" && request.method==="POST") return handleRegister(request, env);
     if (p==="/api/login"    && request.method==="POST") return handleLogin(request, env);
     if (p==="/api/save"     && request.method==="POST") return handleSave(request, env);
     if (p==="/api/trivia")                              return triviaHandler(request);
- 
+
     return new Response(getHTML(), {headers:{"Content-Type":"text/html;charset=UTF-8"}});
   },
 };
